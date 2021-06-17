@@ -60,6 +60,11 @@ def lift(arr):
     return numerator / denominator
 
 
+def growth(arr):
+    support_target_group=arr[0][0] / arr.sum(dtype=float)
+    support_outer_group=arr[0][1]/ arr.sum(dtype=float)
+    return support_target_group/support_outer_group
+
 def support(arr):
     """
     Computes the support of a 2x2 contingency matrix
@@ -365,7 +370,7 @@ class ContrastSetLearner:
         negations = list(product(*iterables))
         return negations
 
-    def score(self, min_support=0.1, min_support_count=10, min_difference=2,
+    def score(self, min_support=0.2, min_support_count=10, min_difference=2,min_growth=2,
               min_lift=2.0, min_confidence=0.75):
         """
         Quantify the rules, and its contingency matrix, using a set of
@@ -414,32 +419,32 @@ class ContrastSetLearner:
                 logging.debug('{}'.format(two_by_two.tolist()))
 
                 # skip if rule difference across groups is not large
-                if abs(np.subtract(*two_by_two[0])) <= min_difference:
-                    continue
+                # if abs(np.subtract(*two_by_two[0])) <= min_difference:
+                #     continue
 
                 # if the rule, in the group, is infrequent, continue on
-                if two_by_two[0][0] <= min_support_count:
-                    continue
+                # if two_by_two[0][0] <= min_support_count:
+                #     continue
 
                 # fetch the actual statistical metric outputs
                 support_out = support(two_by_two)
                 lift_out = lift(two_by_two)
                 conf_out = confidence(two_by_two)
-
+                growth_out=growth(two_by_two)
                 # assert the statistical outputs exceed the cutoffs
                 conditions = [support_out > min_support,
-                              conf_out > min_confidence,
-                              lift_out > min_lift]
+                              growth_out > min_growth]
 
                 # append good rules, and its group, to what will be a DataFrame
                 if all(conditions):
                     group = state_positions[col_num]
-                    row = {'rule': rule, 'group': group, 'lift': lift_out}
+                    #row = {'rule': rule, 'group': group, 'lift': lift_out,'support':support_out,'differnece':abs(np.subtract(*two_by_two[0]))}
+                    row = {'rule': rule, 'group': group,'support':support_out,'growth':growth_out}                    
                     data.append(row)
                     logging.info('{} / {}: {}'.format(i, len(self.counts), row))
 
         # save the resulting rules to a DataFrame and sort by lift
         frame = pd.DataFrame(data)
         if len(frame) > 0:
-            frame.sort_values('lift', ascending=False, inplace=True)
+            frame.sort_values('growth', ascending=False, inplace=True)
         return frame

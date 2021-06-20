@@ -61,8 +61,8 @@ def lift(arr):
 
 
 def growth(arr):
-    support_target_group=arr[0][0] / arr.sum(dtype=float)
-    support_outer_group=arr[0][1]/ arr.sum(dtype=float)
+    support_target_group=arr[0][0] / (arr[0][0]+arr[1][0])
+    support_outer_group=arr[0][1]/ (arr[0][1]+arr[1][1])
     return support_target_group/support_outer_group
 
 def support(arr):
@@ -75,7 +75,7 @@ def support(arr):
     Returns:
         float: support score; ranges from 0 to 1.
     """
-    return arr[0][0] / arr.sum(dtype=float)
+    return arr[0][0] / (arr[0][0]+arr[1][0])
 
 
 def confidence(arr):
@@ -195,9 +195,9 @@ class ContrastSetLearner:
             max_bias = series.value_counts(normalize=True).max()
 
             # remove all features which have values with a high frequency bias
-            if max_bias > max_real_bias:
-                bad_cols.append(col)
-                continue
+            # if max_bias > max_real_bias:
+            #     bad_cols.append(col)
+            #     continue
 
             # if numeric feature has many unique values, partition into chunks
             logging.debug('{}; {:,} unique items'.format(col, len(arr)))
@@ -410,7 +410,6 @@ class ContrastSetLearner:
             for col_num in range(np.shape(contingency_matrix)[1]):
                 this_column = contingency_matrix[:, col_num][:, np.newaxis]
                 not_columns = np.delete(contingency_matrix, col_num, axis=1)
-
                 # compute the row-wise sum for the not-columns
                 not_column_sum = not_columns.sum(axis=1)[:, np.newaxis]
 

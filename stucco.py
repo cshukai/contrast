@@ -1,9 +1,4 @@
-"""
-issue: 
-not pattern for len-2 is intersection of not pattern 1 and not pattern 2
-current implementation to calcuate support and growth only work for len 1 
 
-"""
 
 import os
 import logging

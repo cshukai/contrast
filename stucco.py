@@ -1,9 +1,8 @@
 """
-Demonstrates the ability to execute Contrast-Set Learning using the STUCCO
-algorithm. This algorithm works by deriving association rules that exhibit
-statistical deviations across varying groups, for example "empty" vs "full".
-Resultant association rules, enriched in one group over another, can thus be
-used to elucidate or shed-light on an underlying group-specific lexicon.
+issue: 
+not pattern for len-2 is intersection of not pattern 1 and not pattern 2
+current implementation to calcuate support and growth only work for len 1 
+
 """
 
 import os
@@ -61,8 +60,10 @@ def lift(arr):
 
 
 def growth(arr):
-    support_target_group=arr[0][0] / (arr[0][0]+arr[1][0])
-    support_outer_group=arr[0][1]/ (arr[0][1]+arr[1][1])
+    #support_target_group=arr[0][0] / (arr[0][0]+arr[1][0])
+    support_target_group=arr[0][0] / arr[1][0]
+    #support_outer_group=arr[0][1]/ (arr[0][1]+arr[1][1])
+    support_outer_group=arr[0][1]/ arr[1][1]
     return support_target_group/support_outer_group
 
 def support(arr):
@@ -75,7 +76,8 @@ def support(arr):
     Returns:
         float: support score; ranges from 0 to 1.
     """
-    return arr[0][0] / (arr[0][0]+arr[1][0])
+    #return arr[0][0] / (arr[0][0]+arr[1][0])
+    return arr[0][0] / arr[1][0]
 
 
 def confidence(arr):
@@ -350,7 +352,7 @@ class ContrastSetLearner:
 
         # stores all not-components, i.e. [size = S, size = L], [height = tall]
         iterables = []
-
+        positive=[]
         # for each rule component, fetch its feature, and get all other states
         for component in rule:
 
@@ -363,11 +365,13 @@ class ContrastSetLearner:
             all_components = list(self.metadata['features'][feature])
 
             # remove the rule component, leaving only not-components
-            all_components.remove(component)
+            #all_components.remove(component)
             iterables.append(all_components)
+            #positive.append(component) # this should contain tuple , right now they are strings
 
         # compute negation-combinations
-        negations = list(product(*iterables))
+        negations = list(product(*iterables)) # this is all the  rules  rather than negation at this point 
+        #negations.remove(positive)
         return negations
 
     def score(self, min_support=0.2, min_support_count=10, min_difference=2,min_growth=2,
@@ -426,6 +430,7 @@ class ContrastSetLearner:
                 #     continue
 
                 # fetch the actual statistical metric outputs
+                group=state_positions[col_num]
                 support_out = support(two_by_two)
                 lift_out = lift(two_by_two)
                 conf_out = confidence(two_by_two)
